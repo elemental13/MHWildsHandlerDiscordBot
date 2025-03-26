@@ -3,7 +3,6 @@ using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 using Microsoft.Extensions.DependencyInjection;
-using Services;
 using WildsApi;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -11,7 +10,6 @@ var builder = Host.CreateApplicationBuilder(args);
 var services = builder.Services
     .AddDiscordGateway()
     .AddApplicationCommands()
-    //.AddHostedService<WeeklyTriggerService>()
     .AddSingleton<WildsDocService>()
     .AddHttpClient("wildsapi", (client) => {
         client.BaseAddress = new Uri("https://wilds.mhdb.io");
