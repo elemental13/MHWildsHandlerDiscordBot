@@ -4,6 +4,7 @@ using Helpers;
 using WildsApi;
 
 namespace CommandModules {
+    [SlashCommand("askgemma", "What do you want to ask Gemma?")]
     public class BlacksmithModule : ApplicationCommandModule<ApplicationCommandContext>
     {
         private WildsDocService _wildsService;
@@ -11,8 +12,37 @@ namespace CommandModules {
             _wildsService = wildsService;
         }
 
-        [SlashCommand("armorinfo", "Check the armor information!!!")]    
-        public async Task ArmorInfo() {
+        [SubSlashCommand("armorset", "Check the armor information!!!")]    
+        public async Task ArmorSetInfo(string? armorSetName = null) {
+            // tells discord to wait, discord gives the user a "bot is thinking" message and I have roughly 15 minutes to respond
+            await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+
+            // generate the message
+            var message = MessageHelper.CreateMessage<InteractionMessageProperties>();
+
+            if (armorSetName == null) {
+                message.Content = "Which armor set are you looking for more information about? ~ Gemma";
+                await Context.Interaction.SendFollowupMessageAsync(message);
+                return;
+            }
+
+            // not null, lets try to look it up
+            try {
+                var armorData = await _wildsService.GetArmorSetAsync(armorSetName);
+                if (armorData == null) {
+                    message.Content = "Sorry, I couldn't quite understand, which armor set was it again?";
+                } else {
+                    message.Content = $"This armor set has {armorData[0]?.pieces?.Count()} peices in it.";
+                }
+            } catch {
+                message.Content = "Somethings not right, try again later! ~ Gemma";
+            }
+            
+            await Context.Interaction.SendFollowupMessageAsync(message);
+        }
+
+        [SubSlashCommand("weapons", "Check the weapon information!!!")]    
+        public async Task getWeaponInfo(string? weaponName = null) {
             // tells discord to wait, discord gives the user a "bot is thinking" message and I have roughly 15 minutes to respond
             await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
 
@@ -20,8 +50,8 @@ namespace CommandModules {
             var message = MessageHelper.CreateMessage<InteractionMessageProperties>();
 
             try {
-                var testArmor = await _wildsService.GetArmorAsync();
-                message.Content = testArmor?.name ?? "Unable to aquire data, try again later!";
+                var weaponData = await _wildsService.GetWeaponAsync(weaponName);
+                message.Content = weaponData?.name ?? "Unable to aquire data, try again later!";
             } catch {
                 message.Content = "Unable to aquire data, try again later!";
             }

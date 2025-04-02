@@ -1,11 +1,14 @@
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace WildsApi {
     public class Armor {
         public int id { get; set; }
         public string? name { get; set; }
         public string? description { get; set; }
-        public ArmorKind kind { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<ArmorKind>))]
+        public ArmorKind? kind { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Rank>))]
         public Rank rank { get; set; }
         public int rarity { get; set; }
         public ArmorDefense? defense { get; set; }
@@ -13,7 +16,7 @@ namespace WildsApi {
         public List<int>? slots { get; set; }
         public List<SkillRank>? skills { get; set; }
         public ArmorSet? armorSet { get; set; }
-        public ArmorCrafting? armorCrafting { get; set; }
+        public ArmorCrafting? crafting { get; set; }
     }
 
     public enum ArmorKind {

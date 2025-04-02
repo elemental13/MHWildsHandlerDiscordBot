@@ -4,6 +4,7 @@ using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 using Microsoft.Extensions.DependencyInjection;
 using WildsApi;
+using CommandModules;
 
 var builder = Host.CreateApplicationBuilder(args);
 

@@ -14,7 +14,9 @@ This is a discord bot just built for fun and to create a helpful companion for m
 
 ## Description
 
-This bot is a web scraper that parses the [official monster hunter wilds event quest site](https://info.monsterhunter.com/wilds/event-quest/en-us/schedule) and formats it into nice to read embed messages in discord.  It will download any images it needs to attach them properly and currently it has 3 commands.
+This bot is a web scraper that parses the [official monster hunter wilds event quest site](https://info.monsterhunter.com/wilds/event-quest/en-us/schedule) and formats it into nice to read embed messages in discord.  It will download any images it needs to attach them properly and currently it has 3 commands for events.
+
+It also is slowly being updated to consume the [mhdb-wilds](https://github.com/LartTyler/mhdb-wilds) api with an "ask Gemma" command! (see below)
 
 ### Available Commands:
 
@@ -29,6 +31,19 @@ This bot is a web scraper that parses the [official monster hunter wilds event q
 #### Example: 
 
 ![Example Embed Message](/images/readmeexample1.png)
+
+#### Ask Gemma (Weapon and Armor Info)
+
+| Slash Command | Description |
+| ------------- | ----------- |
+| /askgemma armorset [name] | Get info about the armor set by looking it up by name (right now it just spits out how many peices are in the set) |
+| /askgemma weapon [name] | Get info about the weapon by looking it up by name (right now it just spits the name back to verify its parsing correctly) |
+
+#### Example: 
+
+#### Example: 
+
+![Example Ask Gemma for Armorsets](/images/askgemmaExample1.png)
 
 ## Getting it to work
 

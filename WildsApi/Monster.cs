@@ -1,14 +1,19 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Abstractions;
+using System.Text.Json.Serialization;
 
 namespace WildsApi {
+    // potential webscrape site for monster data is https://mhwilds.kiranico.com/data/monsters but id rather get it from the docs.mhwilds database with query language
     public class Monster {
         public int id { get; set;}
+        [JsonConverter(typeof(JsonStringEnumConverter<MonsterKind>))]
         public MonsterKind kind { get; set;}
+        [JsonConverter(typeof(JsonStringEnumConverter<Species>))]
+        public Species species { get; set;}
         public string? name { get; set;}
         public string? description { get; set;}
         public List<Location>? locations { get; set; }
         public List<Ailment>? ailments { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Element>))]
         public List<Element>? elements { get; set; }
         public List<MonsterResistance>? resistances { get; set; }
         public List<MonsterWeaknesses>? weaknesses { get; set; }
@@ -101,6 +106,7 @@ namespace WildsApi {
         public string? name { get; set; }
         public string? description { get; set; }
         public List<SkillRank>? ranks { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<SkillKind>))]
         public SkillKind kind { get; set; }
     }
 
@@ -154,8 +160,10 @@ namespace WildsApi {
     public class MonsterResistance {
         public int id { get; set;}
         public string? condition { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<ResistanceKind>))]
         public ResistanceKind kind { get; set; }
         public Element element { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
         public Status status { get; set; }
     }
 
@@ -167,8 +175,11 @@ namespace WildsApi {
     public class MonsterWeaknesses {
         public int id { get; set;}
         public string? condition { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<WeaknessKind>))]
         public WeaknessKind kind { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Element>))]
         public Element element { get; set; } // depends on kind, a tagged union type, could be null
+        [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
         public Status status { get; set;} // depends on kind, a tagged union type, could be null
     }
 
@@ -183,7 +194,9 @@ namespace WildsApi {
     }
 
     public class RewardCondition {
+        [JsonConverter(typeof(JsonStringEnumConverter<RewardConditionKind>))]
         public RewardConditionKind kind { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Rank>))]
         public Rank rank { get; set; }
         public int quantity { get; set; }
         public int chance { get; set; }

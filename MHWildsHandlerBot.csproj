@@ -20,6 +20,7 @@
     <PackageReference Include="NetCord.Hosting.AspNetCore" Version="1.0.0-alpha.349" />
     <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.349" />
     <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.349" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
