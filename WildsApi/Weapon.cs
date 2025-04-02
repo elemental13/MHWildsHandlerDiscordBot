@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
@@ -6,15 +7,16 @@ namespace WildsApi {
         public int id {get; set;}
         public int gameId { get; set; }
         public string? name {get; set;}
-        [JsonConverter(typeof(JsonStringEnumConverter<WeaponKind>))]
-        public WeaponKind? kind {get; set;}
+        // [JsonConverter(typeof(JsonStringEnumConverter<WeaponKind>))]
+        public string? kind {get; set;}
         public int rarity {get; set;}
         public WeaponDamage? damage {get; set;}
         public List<WeaponSpecial>? specials {get; set;}
         public Sharpness? sharpness {get; set;}
         public List<int>? handicraft {get; set;}
         public List<SkillRank>? skills {get; set;}
-        public Elderseal elderseal {get; set;}
+        [JsonConverter(typeof(JsonStringEnumConverter<Elderseal>))]
+        public Elderseal? elderseal {get; set;}
         public int affinity {get; set;}
         // this could be represented by the correct picture, a 3 is a three slot jewel, etc etc
         public List<int>? decorations {get; set;}
@@ -38,7 +40,8 @@ namespace WildsApi {
         public int id {get; set;}
         public WeaponDamage? damage {get; set;}
         public bool hidden {get; set;}
-        public SpecialKind? kind {get; set;}
+        // public SpecialKind? kind {get; set;} cant get the fancy union types to work yet, probably needs a custom deserializer
+        public string? kind {get; set;}
     }
 
     public class SpecialKind {
@@ -59,7 +62,8 @@ namespace WildsApi {
     public enum WeaponKind {
         [EnumMember(Value = "bow")]
         bow,
-        [EnumMember(Value = "chage-blade")]
+        [EnumMember(Value = "charge-blade")]
+        [Display(Name = "charge-blade")]
         chargeblade,
         [EnumMember(Value = "dual-blades")]
         dualblades,

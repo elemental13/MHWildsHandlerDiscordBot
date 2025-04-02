@@ -1,6 +1,4 @@
 using System.Net.Http.Json;
-using System.Reflection.Metadata.Ecma335;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -27,7 +25,7 @@ namespace WildsApi {
         /// Gets requested armor set information as a list of armor
         /// </summary>
         /// <returns>Retruns the armor requested, otherwise throws an error.</returns>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="Exception">If it gets an error, it throws so be sure to try/catch this method when using it</exception>
         public async Task<List<ArmorSet?>?> GetArmorSetAsync(string armorName) {
             using var client = _factory.CreateClient("wildsapi");
             var requestString = $"en/armor/sets?q={{\"name\":\"{armorName}\"}}";
@@ -62,7 +60,14 @@ namespace WildsApi {
             }
         }
 
-        public async Task<Weapon?> GetWeaponAsync(string weaponName) {
+        /// <summary>
+        /// Lookup a weapon based on the given name. Technically the query could be a list of weapons that all match that name, so be careful 
+        // (mostly it will be the first item)
+        /// </summary>
+        /// <param name="weaponName">String name of the weapon, it can handle the alpha, beta, gamma symbols</param>
+        /// <returns>Returns a list of parsed weapon(s), otherwise throws an error.</returns>
+        /// <exception cref="Exception">If it gets an error, it throws so be sure to try/catch this method when using it</exception>
+        public async Task<List<Weapon?>?> GetWeaponAsync(string weaponName) {
             using var client = _factory.CreateClient("wildsapi");
             var requestString = $"en/weapons?q={{\"name\":\"{weaponName}\"}}";
 
@@ -80,7 +85,7 @@ namespace WildsApi {
                         throw new Exception(errorMessage);
                     } else {
                         // hey it might actually be our data, lets try to parse it!
-                        var weaponData = await client.GetFromJsonAsync<Weapon>(requestString);
+                        var weaponData = await client.GetFromJsonAsync<List<Weapon?>?>(requestString);
                         return weaponData;
                     }
                 } else {

@@ -49,13 +49,23 @@ namespace CommandModules {
             // generate the message
             var message = MessageHelper.CreateMessage<InteractionMessageProperties>();
 
+            if (weaponName == null) {
+                message.Content = "Which weapon are you looking for more information about? ~ Gemma";
+                await Context.Interaction.SendFollowupMessageAsync(message);
+                return;
+            }
+
+            // not null, lets try to look it up
             try {
                 var weaponData = await _wildsService.GetWeaponAsync(weaponName);
-                message.Content = weaponData?.name ?? "Unable to aquire data, try again later!";
+                if (weaponData == null) {
+                    message.Content = "Sorry, I couldn't quite understand, which weapon was it again? ~ Gemma";
+                } else {
+                    message.Content = $"Found it! This weapon's name is {weaponData[0]?.name}. ~ Gemma";
+                }
             } catch {
-                message.Content = "Unable to aquire data, try again later!";
-            }
-            
+                message.Content = "Somethings not right, try again later! ~ Gemma";
+            }            
 
             await Context.Interaction.SendFollowupMessageAsync(message);
         }
