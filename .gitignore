@@ -54,3 +54,6 @@ TestResult.xml
 nunit-*.xml
 discordbotToken.txt
 appsettings.json
+
+# Custom Scripts
+scripts/
