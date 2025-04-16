@@ -2,14 +2,17 @@ using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using Helpers;
 using WildsApi;
+using Microsoft.Extensions.Logging;
 
 namespace CommandModules {
     [SlashCommand("askgemma", "What do you want to ask Gemma?")]
     public class BlacksmithModule : ApplicationCommandModule<ApplicationCommandContext>
     {
         private WildsDocService _wildsService;
-        public BlacksmithModule(WildsDocService wildsService){
+        private ILogger<BlacksmithModule> _logger;
+        public BlacksmithModule(WildsDocService wildsService, ILogger<BlacksmithModule> logger){
             _wildsService = wildsService;
+            _logger = logger;
         }
 
         [SubSlashCommand("armorset", "Check the armor information!!!")]    
@@ -61,13 +64,21 @@ namespace CommandModules {
                 if (weaponData == null) {
                     message.Content = "Sorry, I couldn't quite understand, which weapon was it again? ~ Gemma";
                 } else {
-                    message.Content = $"Found it! This weapon's name is {weaponData[0]?.name}. ~ Gemma";
+                    message = await MessageHelper.GetWeaponMessage<InteractionMessageProperties>(weaponData[0]);
                 }
             } catch {
                 message.Content = "Somethings not right, try again later! ~ Gemma";
             }            
 
-            await Context.Interaction.SendFollowupMessageAsync(message);
+            try {
+                await Context.Interaction.SendFollowupMessageAsync(message);
+            } catch (Exception ex) {
+                _logger.LogError(ex, "Weapon info not sent because of error...");
+                message = MessageHelper.CreateMessage<InteractionMessageProperties>();
+                message.Content = "Somethings not right, try again later! ~ Gemma";
+                await Context.Interaction.SendFollowupMessageAsync(message);
+            }
+            
         }
     }
 }

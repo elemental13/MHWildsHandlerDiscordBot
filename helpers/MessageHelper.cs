@@ -3,6 +3,7 @@ using System.Globalization;
 using HtmlAgilityPack;
 using HtmlAgilityPack.CssSelectors.NetCore;
 using NetCord.Rest;
+using WildsApi;
 
 namespace Helpers {
     public static class MessageHelper {
@@ -293,6 +294,120 @@ namespace Helpers {
             var commingSoonText = myChallenge.QuerySelector("");
 
             return commingSoonText == null;
+        }
+
+        public static async Task<string?> downloadWeaponImage(string weaponName)
+        {
+            if (weaponName == null) return null;
+
+            // set up the file name and see if it has already been downloaded
+            var fileName = $"{weaponName.Replace(" ", "_")}.png";
+            if (File.Exists($"images/{fileName}")) {
+                Console.WriteLine($"Weapon image already exists as {fileName}.");
+                return fileName;
+            }
+
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    var web = new HtmlWeb();
+                    // Lets use atlasforge.gg/monster-hunter-wilds to pull images from when necessary
+                    var document = web.Load($"https://atlasforge.gg/monster-hunter-wilds/weapons");
+                    // var imgNode = document.DocumentNode.QuerySelector("img");
+                    var imageElement = document.DocumentNode.SelectSingleNode($"//img[@alt='{weaponName}']");
+                    var imageUrl = imageElement.GetAttributeValue("src","");
+
+                    // setup the client to download the image
+                    client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
+                    byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                    await File.WriteAllBytesAsync($"images/{fileName}", imageBytes);
+                    Console.WriteLine($"Weapon image downloaded and saved as: {fileName}");
+                    return fileName;
+                }
+                catch (Exception ex)
+                {
+                    // Handle any exceptions (e.g., network issues, invalid URL)
+                    Console.WriteLine($"Error downloading weapon image: {ex.Message}");
+                    return null;
+                }
+            }
+        }
+
+        public static async Task<T> GetWeaponMessage<T>(Weapon? weapon) where T: IMessageProperties, new() {
+            try {
+                
+                if (weapon == null || weapon.name == null) {
+                    var failedMessage = CreateMessage<T>();
+                    failedMessage.Content = "Sorry, request failed! Try again later!";
+                    return failedMessage;
+                }
+
+                // download the weapon image for the embed message
+                var fileName = await downloadWeaponImage(weapon.name);
+
+                var message = CreateMessage<T>();
+
+                var embed = new EmbedProperties()
+                {
+                    Title = weapon?.name ?? "No Name Found",
+                    Description = weapon?.kind?.Replace("-", " "),
+                    Url =$"https://atlasforge.gg/monster-hunter-wilds/weapons/{weapon?.name.Replace(" ", "-")}", // must be unique for multiple embeds
+                    Timestamp = DateTimeOffset.UtcNow,
+                    Color = new(0x52521F),
+                    Footer = new()
+                    {
+                        Text = "Happy Hunting!!"
+                    },
+                    Image = (fileName != null) ? $"attachment://{fileName}" : "",
+                    Fields =
+                    [
+                        new()
+                        {
+                            Name = "Damage",
+                            Value = weapon?.damage?.display.ToString(),
+                        },
+                        new()
+                        {
+                            Name = "Affinity",
+                            Value = weapon?.affinity.ToString(),
+                        },
+                    ],
+                };
+
+                // calculate the weapon element or status type from the specials list
+                var weaponElement = weapon?.specials?.FirstOrDefault(x => x?.kind == "element", null);
+                var weaponStatus = weapon?.specials?.FirstOrDefault(x => x?.kind == "status", null);
+
+                if (weaponElement != null) {
+                    embed.AddFields(new EmbedFieldProperties(){
+                        Name = "Element",
+                        Value = weaponElement?.damage?.display.ToString(),
+                    });
+                }
+
+                if (weaponStatus != null) {
+                    embed.AddFields(new EmbedFieldProperties(){
+                        Name = "Status",
+                        Value = weaponStatus?.damage?.display.ToString(),
+                    });
+                }
+
+                if (fileName != null){
+                    var attachment = new AttachmentProperties(fileName, new MemoryStream(File.ReadAllBytes("images/" + fileName)));
+                    message.AddAttachments(attachment);
+                }
+                
+                message.AddEmbeds(embed);
+
+                return message;
+            }
+            catch
+            {
+                var message = CreateMessage<T>();
+                message.Content = "Sorry, request failed! Try again later!";
+                return message;
+            }
         }
     }
 }

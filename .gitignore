@@ -57,3 +57,6 @@ appsettings.json
 
 # Custom Scripts
 scripts/
+
+# Extra images
+images/
