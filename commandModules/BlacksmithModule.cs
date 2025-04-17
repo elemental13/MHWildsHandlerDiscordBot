@@ -61,12 +61,13 @@ namespace CommandModules {
             // not null, lets try to look it up
             try {
                 var weaponData = await _wildsService.GetWeaponAsync(weaponName);
-                if (weaponData == null) {
+                if (weaponData == null || weaponData.Count() == 0) {
                     message.Content = "Sorry, I couldn't quite understand, which weapon was it again? ~ Gemma";
                 } else {
-                    message = await MessageHelper.GetWeaponMessage<InteractionMessageProperties>(weaponData[0]);
+                    message = await MessageHelper.GetWeaponMessage<InteractionMessageProperties>(weaponData[0], _wildsService);
                 }
-            } catch {
+            } catch (Exception ex) {
+                _logger.LogError(ex, "Something happened trying to get the weapon info..");
                 message.Content = "Somethings not right, try again later! ~ Gemma";
             }            
 

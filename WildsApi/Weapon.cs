@@ -14,13 +14,23 @@ namespace WildsApi {
         public List<WeaponSpecial>? specials {get; set;}
         public Sharpness? sharpness {get; set;}
         public List<int>? handicraft {get; set;}
-        public List<SkillRank>? skills {get; set;}
+        public List<WeaponSkills>? skills {get; set;}
+        public int? defenseBonus {get; set;}
         [JsonConverter(typeof(JsonStringEnumConverter<Elderseal>))]
         public Elderseal? elderseal {get; set;}
         public int affinity {get; set;}
         // this could be represented by the correct picture, a 3 is a three slot jewel, etc etc
-        public List<int>? decorations {get; set;}
+        public List<int>? slots {get; set;}
         public WeaponCrafting? crafting {get; set;}
+    }
+
+    public class WeaponSkills
+    {
+        public int id { get; set;}
+        public string? name { get; set; }
+        public string? description { get; set; }
+        public int level { get; set; }
+        public Skill? skill { get; set; }
     }
 
     // this can be converted to a percentage bar in html, how we do that i have no idea
@@ -42,22 +52,28 @@ namespace WildsApi {
         public bool hidden {get; set;}
         // public SpecialKind? kind {get; set;} cant get the fancy union types to work yet, probably needs a custom deserializer
         public string? kind {get; set;}
-    }
-
-    public class SpecialKind {
-        public WeaponElement? element {get; set;}
-        public WeaponStatus? status {get; set;}
-    }
-
-    public class WeaponElement {
+        // these next 2 properties I place here, but depending on the kind, it will only populate one of them, but i could not get kind to be a resource join in c# very well without writing a custom 
+        // deserializer, so instead lets try putting both options here and hopefully one will be null and the other will populate correctly?
         [JsonConverter(typeof(JsonStringEnumConverter<Element>))]
         public Element? element {get; set;}
-    }
-
-    public class WeaponStatus {
         [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
         public Status? status {get; set;}
     }
+
+    // public class SpecialKind {
+    //     public WeaponElement? element {get; set;}
+    //     public WeaponStatus? status {get; set;}
+    // }
+
+    // public class WeaponElement {
+    //     [JsonConverter(typeof(JsonStringEnumConverter<Element>))]
+    //     public Element? element {get; set;}
+    // }
+
+    // public class WeaponStatus {
+    //     [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
+    //     public Status? status {get; set;}
+    // }
 
     public enum WeaponKind {
         [EnumMember(Value = "bow")]

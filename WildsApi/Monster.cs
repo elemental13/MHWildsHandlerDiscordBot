@@ -105,6 +105,7 @@ namespace WildsApi {
         public int id { get; set;}
         public string? name { get; set; }
         public string? description { get; set; }
+        public int level { get; set; }
         public List<SkillRank>? ranks { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter<SkillKind>))]
         public SkillKind kind { get; set; }
@@ -112,6 +113,7 @@ namespace WildsApi {
 
     public class SkillRank {
         public int id { get; set;}
+        public string? name { get; set; }
         public string? description { get; set; }
         public int level { get; set; }
     }

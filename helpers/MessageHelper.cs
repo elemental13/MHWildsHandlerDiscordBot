@@ -1,8 +1,13 @@
 using System.Diagnostics;
 using System.Globalization;
+using CoreHtmlToImage;
 using HtmlAgilityPack;
 using HtmlAgilityPack.CssSelectors.NetCore;
 using NetCord.Rest;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using WildsApi;
 
 namespace Helpers {
@@ -334,7 +339,7 @@ namespace Helpers {
             }
         }
 
-        public static async Task<T> GetWeaponMessage<T>(Weapon? weapon) where T: IMessageProperties, new() {
+        public static async Task<T> GetWeaponMessage<T>(Weapon? weapon, WildsDocService wildsDocService) where T: IMessageProperties, new() {
             try {
                 
                 if (weapon == null || weapon.name == null) {
@@ -345,32 +350,36 @@ namespace Helpers {
 
                 // download the weapon image for the embed message
                 var fileName = await downloadWeaponImage(weapon.name);
+                var sharpnessFileName = GetWeaponSharpnessImage(weapon, fileName);
 
                 var message = CreateMessage<T>();
 
                 var embed = new EmbedProperties()
                 {
                     Title = weapon?.name ?? "No Name Found",
-                    Description = weapon?.kind?.Replace("-", " "),
+                    Thumbnail = (fileName != null) ? $"attachment://{fileName}" : "",
+                    Description = $"Rarity {weapon?.rarity} {weapon?.kind?.Replace("-", " ")}",
                     Url =$"https://atlasforge.gg/monster-hunter-wilds/weapons/{weapon?.name.Replace(" ", "-")}", // must be unique for multiple embeds
                     Timestamp = DateTimeOffset.UtcNow,
                     Color = new(0x52521F),
                     Footer = new()
                     {
-                        Text = "Happy Hunting!!"
+                        Text = "Happy Hunting!!",
                     },
-                    Image = (fileName != null) ? $"attachment://{fileName}" : "",
+                    Image = (sharpnessFileName != null) ? $"attachment://{sharpnessFileName}" : "",
                     Fields =
                     [
                         new()
                         {
                             Name = "Damage",
                             Value = weapon?.damage?.display.ToString(),
+                            Inline = true,
                         },
                         new()
                         {
                             Name = "Affinity",
-                            Value = weapon?.affinity.ToString(),
+                            Value = $"{weapon?.affinity.ToString()}%",
+                            Inline = true,
                         },
                     ],
                 };
@@ -381,33 +390,150 @@ namespace Helpers {
 
                 if (weaponElement != null) {
                     embed.AddFields(new EmbedFieldProperties(){
-                        Name = "Element",
+                        Name = weaponElement?.element?.ToString().FirstCharToUpper(),
                         Value = weaponElement?.damage?.display.ToString(),
+                        Inline = true,
                     });
                 }
 
                 if (weaponStatus != null) {
                     embed.AddFields(new EmbedFieldProperties(){
-                        Name = "Status",
+                        Name = weaponStatus?.status?.ToString().FirstCharToUpper(),
                         Value = weaponStatus?.damage?.display.ToString(),
+                        Inline = true,
                     });
                 }
 
+                // continue adding fields
+                embed.AddFields(
+                    [
+                        new EmbedFieldProperties(){
+                            Name = "Defense",
+                            Value = weapon?.defenseBonus?.ToString(),
+                            Inline = true,
+                        },
+                    ]
+                );
+
+                string? slotString = null;
+                foreach (var slot in weapon?.slots ?? new List<int>()) {
+                    slotString += string.Format("[Lv {0}] ", slot);
+                }
+
+                // slots
+                embed.AddFields(new EmbedFieldProperties(){
+                    Name = "Slots",
+                    Value = slotString ?? "-",
+                    Inline = true,
+                });
+
+                // skills
+                foreach (var skills in weapon?.skills ?? new List<WeaponSkills>()) {
+                    embed.AddFields(new EmbedFieldProperties(){
+                        Name = "Skill",
+                        Value = $"{skills.level}x {skills.skill?.name ?? "N/A"}",
+                        Inline = false,
+                    });  
+                }
+
+                // if we have a filename to attach, add it to the message!
                 if (fileName != null){
                     var attachment = new AttachmentProperties(fileName, new MemoryStream(File.ReadAllBytes("images/" + fileName)));
                     message.AddAttachments(attachment);
+                }
+
+                // if we created a sharpness image, add it to the message!
+                if (sharpnessFileName != null){
+                    var attachment2 = new AttachmentProperties(sharpnessFileName, new MemoryStream(File.ReadAllBytes("images/" + sharpnessFileName)));
+                    message.AddAttachments(attachment2);
                 }
                 
                 message.AddEmbeds(embed);
 
                 return message;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 var message = CreateMessage<T>();
                 message.Content = "Sorry, request failed! Try again later!";
                 return message;
             }
+        }
+
+        public static string? GetWeaponSharpnessImage(Weapon? weapon, string? fileName) {
+            if (weapon == null || fileName == null) return null;
+
+            var sharpnessFileName = $"{fileName?.Replace(".png", "")}_sharpness.png";
+
+            // we only need to calculate this once and then we can just reuse the image
+            if (File.Exists("images/" + sharpnessFileName)) {
+                return sharpnessFileName;
+            }
+
+            // looking at the weapon's sharpness int array, we can calculate the percentage of the sharpness color
+            // handicraft will tell us when the color will change if that skill is applied 
+            float redSharpness = ((float)((weapon?.sharpness?.red) ?? 0f)) / 400f * 100f;
+            float orangeSharpness = ((float)((weapon?.sharpness?.orange) ?? 0f)) / 400f * 100f;
+            float yellowSharpness = ((float)((weapon?.sharpness?.yellow) ?? 0f)) / 400f * 100f;;
+            float greenSharpness = ((float)((weapon?.sharpness?.green) ?? 0f)) / 400f * 100f;
+            float blueSharpness = ((float)((weapon?.sharpness?.blue) ?? 0f)) / 400f * 100f;
+            float whiteSharpness = ((float)((weapon?.sharpness?.white) ?? 0f)) / 400f * 100f;
+            float purpleSharpness = ((float)((weapon?.sharpness?.purple) ?? 0f)) / 400f * 100f;
+
+            string sharpnessHtml = $@"
+            <html>
+            <head></head>
+            <body>
+                <div style=""width:214px;height:6px;font-size:0;"">
+                    <span style=""background-color:#E63A3A;width:{redSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:#E68A45;width:{orangeSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:#D9C541;width:{yellowSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:#68CC52;width:{greenSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:#41A2D9;width:{blueSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:#D9D9D9;width:{whiteSharpness}%;height:100%;display:inline-block;""></span>
+                    <span style=""background-color:transparent;width:{purpleSharpness}%;height:100%;display:inline-block;""></span>
+                </div>
+            </body>
+            </html>
+            ";
+
+            var converter = new HtmlConverter();
+            var bytes = converter.FromHtmlString(sharpnessHtml, 214, ImageFormat.Png);
+            File.WriteAllBytes("images/" + sharpnessFileName, bytes);
+
+            ImageHelper.MakeTransparent(sharpnessFileName);
+
+            return sharpnessFileName;
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string FirstCharToUpper(this string input) =>
+            input switch
+            {
+                null => throw new ArgumentNullException(nameof(input)),
+                "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+                _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
+            };
+    }
+
+    public static class ImageHelper
+    {
+        public static void MakeTransparent(string fileName)
+        {
+            using var image = Image.Load<Rgba32>(new MemoryStream(File.ReadAllBytes("images/" + fileName)));
+
+            float threshold = 0.005F;
+            Color sourceColor = Color.White;
+            Color targetColor = Color.Transparent;
+            RecolorBrush brush = new RecolorBrush(sourceColor, targetColor, threshold);
+
+            image.Mutate(context => context.Clear(brush));
+
+
+            image.SaveAsPng("images/" + fileName);
         }
     }
 }
