@@ -79,7 +79,6 @@ namespace CommandModules {
                 message.Content = "Somethings not right, try again later! ~ Gemma";
                 await Context.Interaction.SendFollowupMessageAsync(message);
             }
-            
         }
     }
 }

@@ -506,6 +506,82 @@ namespace Helpers {
 
             return sharpnessFileName;
         }
+
+        public static T GetMonsterMessage<T>(Monster? monster) where T: IMessageProperties, new() {
+            try {
+                
+                if (monster == null || monster.name == null) {
+                    var failedMessage = CreateMessage<T>();
+                    failedMessage.Content = "Sorry, request failed! Try again later!";
+                    return failedMessage;
+                }
+
+                // download the weapon image for the embed message
+                var fileName = "rathian.png";
+                ImageHelper.MakeTransparent("images/monstericons/" + fileName, Color.Black);
+
+                var message = CreateMessage<T>();
+
+                var embed = new EmbedProperties()
+                {
+                    Title = monster?.name ?? "No Name Found",
+                    Thumbnail = (fileName != null) ? $"attachment://{fileName}" : "",
+                    Description = $"{monster?.description ?? "No Description Found"}",
+                    Url =$"https://mhwilds.kiranico.com/data/monsters/{monster?.name.Replace(" ", "-")}", // must be unique for multiple embeds
+                    Timestamp = DateTimeOffset.UtcNow,
+                    Color = new(0x52521F),
+                    Footer = new()
+                    {
+                        Text = "Happy Hunting!!",
+                    },
+                    // Image = (sharpnessFileName != null) ? $"attachment://{sharpnessFileName}" : "",
+                    Fields =
+                    [
+                        new()
+                        {
+                            Name = "Kind",
+                            Value = monster?.kind.ToString(),
+                            Inline = true,
+                        },
+                        new()
+                        {
+                            Name = "Species",
+                            Value = monster?.species.ToString(),
+                            Inline = true,
+                        },
+                    ],
+                };
+
+                string? locationString = null;
+                foreach (var location in monster?.locations ?? new List<Location>()) {
+                    locationString += location.name + ", ";
+                }
+
+                // slots
+                embed.AddFields(new EmbedFieldProperties(){
+                    Name = "Location(s)",
+                    Value = (locationString ?? "-").Trim().TrimEnd(','),
+                    Inline = true,
+                });
+
+                // if we have a filename to attach, add it to the message!
+                if (fileName != null){
+                    var attachment = new AttachmentProperties(fileName, new MemoryStream(File.ReadAllBytes("images/monstericons/" + fileName)));
+                    message.AddAttachments(attachment);
+                }
+                
+                message.AddEmbeds(embed);
+
+                return message;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                var message = CreateMessage<T>();
+                message.Content = "Sorry, request failed! Try again later!";
+                return message;
+            }
+        }
     }
 
     public static class StringExtensions
@@ -534,6 +610,20 @@ namespace Helpers {
 
 
             image.SaveAsPng("images/" + fileName);
+        }
+
+        public static void MakeTransparent(string fileFullPath, Color sourceColor)
+        {
+            using var image = Image.Load<Rgba32>(new MemoryStream(File.ReadAllBytes(fileFullPath)));
+
+            float threshold = 0.005F;
+            Color targetColor = Color.Transparent;
+            RecolorBrush brush = new RecolorBrush(sourceColor, targetColor, threshold);
+
+            image.Mutate(context => context.Clear(brush));
+
+
+            image.SaveAsPng(fileFullPath);
         }
     }
 }

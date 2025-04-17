@@ -12,13 +12,46 @@ namespace WildsApi {
             _factory = client;
         }
 
-        // GET Https://wilds.mhdb.io/en/monsters/{id} - not implemented yet as of 3/18/2025, the data is not yet updated
-        public async Task<Monster?> GetMonsterAsync() {
+        /// <summary>
+        /// Gets the monster information from the API at https://wilds.mhdb.io/en/monsters. With a query by name, it will also return
+        /// the other versions of the monster, for example Rey Dau will also return Tempered Ray Dau. So this method will also search the list for
+        /// the single monster instead.
+        /// </summary>
+        /// <param name="name">Name of the monster to search for</param>
+        /// <returns>A single monster that matches the searched name.</returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<Monster?> GetMonsterAsync(string name) {
             using var client = _factory.CreateClient("wildsapi");
+            var requestString = $"en/monsters?q{{\"name\":\"{name}\"}}";
 
-            var testMonster = await client.GetFromJsonAsync<Monster>("en/monsters/20");
+            try {
+                var response = await client.GetAsync(requestString);
 
-            return testMonster;
+                if (response.IsSuccessStatusCode) {
+                    // get the content before deserializing it to make sure its not an error from the server being returned
+                    var data = await response.Content.ReadAsStringAsync();
+
+                    if (data.Contains("error")){
+                        var errorResponse = JsonConvert.DeserializeObject<ApiError>(data);
+                        var errorMessage = $"Api call to {requestString} failed with code: { errorResponse?.code } and message: {errorResponse?.message}";
+                        _logger.LogError(errorMessage);
+                        throw new Exception(errorMessage);
+                    } else {
+                        // hey it might actually be our data, lets try to parse it!
+                        var monsterData = JsonConvert.DeserializeObject<List<Monster?>?>(data)?.Find(x => x?.name == name);
+                        return monsterData;
+                    }
+                } else {
+                    // response is not a successful status code
+                    _logger.LogError($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                    throw new Exception($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                }
+                
+            } catch(Exception ex) {
+                // it could be an error that we cant parse, or we tried to parse our monster but failed
+                _logger.LogError(ex, ex.Message);
+                throw new Exception(ex.Message, ex.InnerException);
+            }
         }
 
         /// <summary>

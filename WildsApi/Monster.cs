@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
 namespace WildsApi {
@@ -26,32 +27,48 @@ namespace WildsApi {
     }
 
     public enum Species {
-        [Display(Name="bird wyvern")]
+        [EnumMember(Value = "bird-wyvern")]
         BirdWyvern,
-        [Display(Name="brute wyvern")]
+        [EnumMember(Value = "brute-wyvern")]
         BruteWyvern,
-        [Display(Name="elder dragon")]
+        [EnumMember(Value = "elder-dragon")]
         ElderDragon,
-        [Display(Name="fanged wyvern")]
+        [EnumMember(Value = "fanged-wyvern")]
         FangedWyvern,
-        [Display(Name="fish")]
+        [EnumMember(Value = "fish")]
         Fish,
-        [Display(Name="flying wyvern")]
+        [EnumMember(Value = "flying-wyvern")]
         FlyingWyvern,
-        [Display(Name="herbivore")]
+        [EnumMember(Value = "herbivore")]
         Herbivore,
-        [Display(Name="lynian")]
+        [EnumMember(Value = "lynian")]
         Lynian,
-        [Display(Name="neopteron")]
+        [EnumMember(Value = "neopteron")]
         Neopteron,
-        [Display(Name="piscine wyvern")]
+        [EnumMember(Value = "piscine-wyvern")]
         PiscineWyvern,
-        [Display(Name="relict")]
+        [EnumMember(Value = "relict")]
         Relict,
-        [Display(Name="wingdrake")]
+        [EnumMember(Value = "wingdrake")]
         Wingdrake,
-        [Display(Name="fanged beast")]
+        [EnumMember(Value = "fanged-beast")]
         FangedBeast,
+        [EnumMember(Value = "construct")]
+        Construct,
+        [EnumMember(Value = "temnoceran")]
+        Temnoceran,
+        [EnumMember(Value = "demi-elder")]
+        DemiElder,
+        [EnumMember(Value = "cephalopod")]
+        Cephalopod,
+        [EnumMember(Value = "carapaceon")]
+        Carapaceon,
+        [EnumMember(Value = "leviathan")]
+        Leviathan,
+        [EnumMember(Value = "amphibian")]
+        Amphibian,
+        [EnumMember(Value = "snake-wyvern")]
+        SnakeWyvern,
     }
 
     public class Location {
@@ -145,6 +162,7 @@ namespace WildsApi {
         sleep,
         paralysis,
         stun,
+        blastblight,
     }
 
     public enum DamageKind {
@@ -163,15 +181,18 @@ namespace WildsApi {
         public int id { get; set;}
         public string? condition { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter<ResistanceKind>))]
-        public ResistanceKind kind { get; set; }
-        public Element element { get; set; }
+        public ResistanceKind? kind { get; set; }
+        public Element? element { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
-        public Status status { get; set; }
+        public Status? status { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter<Effect>))]
+        public Effect? effect { get; set; }
     }
 
     public enum ResistanceKind {
         element,
         status,
+        effect,
     }
 
     public class MonsterWeaknesses {
@@ -180,14 +201,17 @@ namespace WildsApi {
         [JsonConverter(typeof(JsonStringEnumConverter<WeaknessKind>))]
         public WeaknessKind kind { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter<Element>))]
-        public Element element { get; set; } // depends on kind, a tagged union type, could be null
+        public Element? element { get; set; } // depends on kind, a tagged union type, could be null
         [JsonConverter(typeof(JsonStringEnumConverter<Status>))]
-        public Status status { get; set;} // depends on kind, a tagged union type, could be null
+        public Status? status { get; set;} // depends on kind, a tagged union type, could be null
+        [JsonConverter(typeof(JsonStringEnumConverter<Effect>))]
+        public Effect? effect { get; set; } // depends on kind, a tagged union type, could be null
     }
 
     public enum WeaknessKind {
         element,
         status,
+        effect,
     }
 
     public class MonsterReward {
@@ -197,9 +221,9 @@ namespace WildsApi {
 
     public class RewardCondition {
         [JsonConverter(typeof(JsonStringEnumConverter<RewardConditionKind>))]
-        public RewardConditionKind kind { get; set; }
+        public RewardConditionKind? kind { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter<Rank>))]
-        public Rank rank { get; set; }
+        public Rank? rank { get; set; }
         public int quantity { get; set; }
         public int chance { get; set; }
         public string? subtype { get; set; }
@@ -214,5 +238,31 @@ namespace WildsApi {
         shiny,
         track,
         wound,
+        [EnumMember(Value = "target-reward")]
+        targetreward,
+        [EnumMember(Value = "carve-rotten")]
+        carverotten,
+        [EnumMember(Value = "wound-destroyed")]
+        wounddestroyed,
+        [EnumMember(Value = "carve-rotten-severed")]
+        carverottensevered,
+        [EnumMember(Value = "wound-destroyed-severed")]
+        wounddestroyedsevered,
+        [EnumMember(Value = "broken-part")]
+        brokenpart,
+        [EnumMember(Value = "carve-severed")]
+        carvesevered,
+        [EnumMember(Value = "carve-crystallized")]
+        carvecrystallized,
+        [EnumMember(Value = "tempered-wound-destroyed")]
+        temperedwounddestroyed,
+        tempered,
+    }
+
+    public enum Effect {
+        noise,
+        flash,
+        stun,
+        exhaust,
     }
 }
