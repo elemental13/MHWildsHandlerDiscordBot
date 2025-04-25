@@ -56,5 +56,26 @@ It also is slowly being updated to consume the [mhdb-wilds](https://github.com/L
 
 ## Getting it to work
 
-I probably wont make this publically available as a bot on discords site just yet (copyright and what not) but you are more than welcome to steal my code and take a peek at what you will need. I am excluding the appsettings.json, which if you read the tutorial on [NetCord](https://netcord.dev/), they will show you how to set it up.  I used vscode to run this (hence the .vscode folder) with the c# extension installed.  Then just run it like a console exe.  Happy Hunting!!!
+I probably wont make this publically available as a bot on discords site just yet (copyright and what not) but you are more than welcome to steal my code and take a peek at what you will need. 
+
+### NetCord AppSettings.json (tells your server what bot to use)
+
+I am excluding the appsettings.json, which if you read the tutorial on [NetCord](https://netcord.dev/), they will show you how to set it up.
+
+### Dependencies if on Linux (since im running mine from a raspberry pi server)
+
+In order to get the weapon sharpness to generate (I generate a html string and then use a tool to convert it to an image called [wkhtmltopdf](https://wkhtmltopdf.org/)) using linux, you need to install the wkhtmltopdf package:
+
+```sh
+sudo apt-get update
+sudo apt-get install wkhtmltopdf
+```
+
+This should eliminate any errors coming from the server. For windows, this package comes in automatically for us.
+
+### Starting the Bot
+
+I used vscode to run this (hence the .vscode folder) with the c# extension installed.  Then just run it like a console exe.
+
+Happy Hunting!!!
 
