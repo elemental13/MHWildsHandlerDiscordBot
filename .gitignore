@@ -61,3 +61,4 @@ scripts/
 # Extra images
 images/*
 !images/examples/
+!images/monstericons/

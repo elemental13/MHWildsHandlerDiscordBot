@@ -25,24 +25,26 @@ namespace CommandModules {
                 // tells discord to wait, discord gives the user a "bot is thinking" message and I have roughly 15 minutes to respond
                 await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
 
-                // generate the message
-                var message = await MessageHelper.GetEventMessage<InteractionMessageProperties>(week);
-                // generate the challenge message
-                var message2 = await MessageHelper.GetChallengeMessage<InteractionMessageProperties>(week);
+                // generate the message list
+                var messageList = await MessageHelper.GetEventMessageList<InteractionMessageProperties>(week);
+                // generate the challenge message list
+                var challengeList = await MessageHelper.GetChallengeMessageList<InteractionMessageProperties>(week);
 
-                // add the challenge messages to the first one to send just one message together
-                if (message2?.Embeds?.Count() > 0) {
-                    message.AddEmbeds(message2.Embeds);
-                    if (message2.Attachments != null) message.AddAttachments(message2.Attachments);
+                // could be multiple messages with groups of 10 embeds for discord limitations
+                foreach(var message in messageList ?? new List<InteractionMessageProperties>()) {
+                    await Context.Interaction.SendFollowupMessageAsync(message);
                 }
 
-                await Context.Interaction.SendFollowupMessageAsync(message);
-            }
-            catch
-            {
-                var message = MessageHelper.CreateMessage<InteractionMessageProperties>();
-                message.Content = "Sorry, request failed! Try again later!";
-                await Context.Interaction.SendFollowupMessageAsync(message);
+                // could be multiple messages with groups of 10 embeds for discord limitations
+                foreach(var challenge in challengeList ?? new List<InteractionMessageProperties>()) {
+                    await Context.Interaction.SendFollowupMessageAsync(challenge);
+                }
+
+            } catch (Exception ex) {
+                var errorMessage = MessageHelper.CreateMessage<InteractionMessageProperties>();
+                errorMessage.Content = "Sorry, something went wrong!!";
+                Console.WriteLine(ex.Message);
+                await Context.Interaction.SendFollowupMessageAsync(errorMessage);
             }
         }
     }
